@@ -4,6 +4,7 @@ dist
 .DS_Store
 .clickhouse-local/
 .turbo/
+.codex/
 .env
 .env.local
 .env*.local
