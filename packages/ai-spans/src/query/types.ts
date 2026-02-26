@@ -4,6 +4,8 @@ export interface ObservationFilters {
   provider?: string;
   model?: string;
   functionId?: string;
+  userId?: string;
+  sessionId?: string;
   errorOnly?: boolean;
   limit?: number;
   offset?: number;
@@ -22,6 +24,8 @@ export interface ObservationRow {
   provider: string | null;
   model: string | null;
   functionId: string | null;
+  userId: string | null;
+  sessionId: string | null;
   promptTokens: number | null;
   completionTokens: number | null;
   totalTokens: number | null;
@@ -71,6 +75,8 @@ export interface TraceSpanRow {
   provider: string | null;
   model: string | null;
   functionId: string | null;
+  userId: string | null;
+  sessionId: string | null;
   promptTokens: number | null;
   completionTokens: number | null;
   totalTokens: number | null;

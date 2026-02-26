@@ -27,6 +27,8 @@ export function parseObservationSearchParams(
   if (hasSearchParam(searchParams, 'provider')) parsed.provider = getSearchParam(searchParams, 'provider') || undefined;
   if (hasSearchParam(searchParams, 'model')) parsed.model = getSearchParam(searchParams, 'model') || undefined;
   if (hasSearchParam(searchParams, 'functionId')) parsed.functionId = getSearchParam(searchParams, 'functionId') || undefined;
+  if (hasSearchParam(searchParams, 'userId')) parsed.userId = getSearchParam(searchParams, 'userId') || undefined;
+  if (hasSearchParam(searchParams, 'sessionId')) parsed.sessionId = getSearchParam(searchParams, 'sessionId') || undefined;
 
   if (hasSearchParam(searchParams, 'errorOnly')) {
     const value = getSearchParam(searchParams, 'errorOnly');

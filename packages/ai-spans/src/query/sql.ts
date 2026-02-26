@@ -29,6 +29,8 @@ export function buildWhereClause(filters: ObservationFilters): string {
   if (filters.provider) clauses.push(`provider = ${escapeNullableStringLiteral(filters.provider)}`);
   if (filters.model) clauses.push(`model = ${escapeNullableStringLiteral(filters.model)}`);
   if (filters.functionId) clauses.push(`function_id = ${escapeNullableStringLiteral(filters.functionId)}`);
+  if (filters.userId) clauses.push(`user_id = ${escapeNullableStringLiteral(filters.userId)}`);
+  if (filters.sessionId) clauses.push(`session_id = ${escapeNullableStringLiteral(filters.sessionId)}`);
   if (filters.errorOnly) clauses.push('status_code > 0');
 
   return clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';

@@ -34,6 +34,8 @@ describe('transformSpanToRow', () => {
           'gen_ai.usage.output_tokens': 34,
           'gen_ai.usage.total_tokens': 46,
           'ai.telemetry.functionId': 'chat.generate',
+          'ai.telemetry.metadata.ai_spans.user_id': 'user_1',
+          'ai.telemetry.metadata.ai_spans.session_id': 'session_1',
           'ai.input': 'hello',
           'ai.output': 'world',
           'ai.telemetry.metadata.userId': 'u_1',
@@ -55,6 +57,8 @@ describe('transformSpanToRow', () => {
     expect(row.provider).toBe('openai');
     expect(row.model).toBe('gpt-4o-mini');
     expect(row.function_id).toBe('chat.generate');
+    expect(row.user_id).toBe('user_1');
+    expect(row.session_id).toBe('session_1');
     expect(row.prompt_tokens).toBe(12);
     expect(row.output_text).toBe('world');
     expect(row.content_recorded).toBe(true);

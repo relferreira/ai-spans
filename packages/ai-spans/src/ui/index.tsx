@@ -151,6 +151,14 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
                 <div>Function ID</div>
                 <input name="functionId" defaultValue={filters.functionId ?? ''} style={{ width: '100%' }} />
               </label>
+              <label>
+                <div>User ID</div>
+                <input name="userId" defaultValue={filters.userId ?? ''} style={{ width: '100%' }} />
+              </label>
+              <label>
+                <div>Session ID</div>
+                <input name="sessionId" defaultValue={filters.sessionId ?? ''} style={{ width: '100%' }} />
+              </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 20 }}>
                 <input type="checkbox" name="errorOnly" value="1" defaultChecked={Boolean(filters.errorOnly)} />
                 Errors only
@@ -239,6 +247,8 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
                   <th style={thtdStyle}>Start</th>
                   <th style={thtdStyle}>Span</th>
                   <th style={thtdStyle}>Function</th>
+                  <th style={thtdStyle}>User</th>
+                  <th style={thtdStyle}>Session</th>
                   <th style={thtdStyle}>Provider/Model</th>
                   <th style={thtdStyle}>Latency</th>
                   <th style={thtdStyle}>Tokens</th>
@@ -249,7 +259,7 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
               <tbody>
                 {observations.rows.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={thtdStyle}>No observations found.</td>
+                    <td colSpan={10} style={thtdStyle}>No observations found.</td>
                   </tr>
                 ) : (
                   observations.rows.map((row) => (
@@ -257,6 +267,8 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
                       <td style={thtdStyle}>{formatDate(row.startTime)}</td>
                       <td style={thtdStyle}>{row.spanName}</td>
                       <td style={thtdStyle}>{row.functionId ?? '-'}</td>
+                      <td style={thtdStyle}>{row.userId ?? '-'}</td>
+                      <td style={thtdStyle}>{row.sessionId ?? '-'}</td>
                       <td style={thtdStyle}>{[row.provider, row.model].filter(Boolean).join(' / ') || '-'}</td>
                       <td style={thtdStyle}>{formatMs(row.durationMs)}</td>
                       <td style={thtdStyle}>{row.totalTokens ?? '-'}</td>
@@ -312,6 +324,8 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
                 <th style={thtdStyle}>Start</th>
                 <th style={thtdStyle}>Span</th>
                 <th style={thtdStyle}>Function</th>
+                <th style={thtdStyle}>User</th>
+                <th style={thtdStyle}>Session</th>
                 <th style={thtdStyle}>Model</th>
                 <th style={thtdStyle}>Latency</th>
                 <th style={thtdStyle}>Status</th>
@@ -324,6 +338,8 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
                   <td style={thtdStyle}>{formatDate(span.startTime)}</td>
                   <td style={thtdStyle}>{span.spanName}</td>
                   <td style={thtdStyle}>{span.functionId ?? '-'}</td>
+                  <td style={thtdStyle}>{span.userId ?? '-'}</td>
+                  <td style={thtdStyle}>{span.sessionId ?? '-'}</td>
                   <td style={thtdStyle}>{[span.provider, span.model].filter(Boolean).join(' / ') || '-'}</td>
                   <td style={thtdStyle}>{formatMs(span.durationMs)}</td>
                   <td style={thtdStyle}>{span.statusCode > 0 ? `ERR ${span.statusCode}` : 'OK'}</td>

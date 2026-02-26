@@ -3,7 +3,7 @@ import { AI_SPANS_DEFAULT_TABLE } from '../config';
 import type { ClickHouseHttpClient } from './client';
 import { qualifiedTable, quoteIdentifier } from './sql';
 
-export const AI_SPANS_SCHEMA_VERSION = 1;
+export const AI_SPANS_SCHEMA_VERSION = 2;
 
 export async function ensureAiSpansSchema(client: ClickHouseHttpClient, config: AiSpansResolvedConfig): Promise<void> {
   const database = quoteIdentifier(config.clickhouse.database);
@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS ${table} (
   app_route Nullable(String),
   ai_operation LowCardinality(String),
   function_id Nullable(String),
+  user_id Nullable(String),
+  session_id Nullable(String),
   provider LowCardinality(Nullable(String)),
   model LowCardinality(Nullable(String)),
   prompt_tokens Nullable(UInt32),
@@ -55,6 +57,13 @@ ORDER BY (toDate(start_time), ifNull(function_id, ''), span_name, trace_id, star
 ${ttlClause}
 SETTINGS index_granularity = 8192
 `.trim());
+
+  await client.command(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS user_id Nullable(String) AFTER function_id`).catch(() => {
+    // Best-effort schema upgrade for existing tables.
+  });
+  await client.command(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS session_id Nullable(String) AFTER user_id`).catch(() => {
+    // Best-effort schema upgrade for existing tables.
+  });
 
   if (config.retentionDays) {
     await client.command(

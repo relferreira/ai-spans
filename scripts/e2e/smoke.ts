@@ -262,6 +262,8 @@ async function waitForSpanCountIncrease(db, functionId, baseline, timeoutMs = 30
 
 async function postChatMessage(port, prompt) {
   const payload = {
+    userId: 'e2e_user',
+    sessionId: `e2e_session_${Date.now()}`,
     messages: [
       {
         id: `msg-${Date.now()}`,

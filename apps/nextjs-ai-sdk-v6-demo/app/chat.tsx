@@ -13,6 +13,9 @@ function partsToText(parts: { type: string; text?: string }[] | undefined): stri
     .join('');
 }
 
+const DEMO_USER_ID = 'demo_user_1';
+const DEMO_SESSION_ID = 'demo_session_1';
+
 export function ChatDemo() {
   const [input, setInput] = useState('');
   const { messages, sendMessage, status, error, stop } = useChat();
@@ -39,6 +42,8 @@ export function ChatDemo() {
           </div>
         </div>
         <div className="kv">Status: {statusLabel}</div>
+        <div className="kv">User ID: {DEMO_USER_ID}</div>
+        <div className="kv">Session ID: {DEMO_SESSION_ID}</div>
         {error ? <div style={{ color: '#b91c1c' }}>Error: {error.message}</div> : null}
       </section>
 
@@ -72,7 +77,15 @@ export function ChatDemo() {
               const text = input.trim();
               if (!text) return;
               setInput('');
-              await sendMessage({ text });
+              await sendMessage(
+                { text },
+                {
+                  body: {
+                    userId: DEMO_USER_ID,
+                    sessionId: DEMO_SESSION_ID,
+                  },
+                },
+              );
             }}
           >
             Send

@@ -21,6 +21,8 @@ export interface AiSpansRow {
   app_route: string | null;
   ai_operation: string;
   function_id: string | null;
+  user_id: string | null;
+  session_id: string | null;
   provider: string | null;
   model: string | null;
   prompt_tokens: number | null;
@@ -40,6 +42,22 @@ export interface AiSpansRow {
 const PROVIDER_KEYS = ['gen_ai.system', 'gen_ai.provider.name', 'ai.provider', 'vercel.ai.provider'];
 const MODEL_KEYS = ['gen_ai.request.model', 'gen_ai.response.model', 'ai.model', 'vercel.ai.model'];
 const FUNCTION_ID_KEYS = ['ai.telemetry.functionId', 'vercel.ai.functionId', 'ai.function_id', 'function_id', 'functionId'];
+const USER_ID_KEYS = [
+  'ai.telemetry.metadata.ai_spans.user_id',
+  'vercel.ai.metadata.ai_spans.user_id',
+  'metadata.ai_spans.user_id',
+  'ai_spans.user_id',
+  'enduser.id',
+  'user.id',
+];
+const SESSION_ID_KEYS = [
+  'ai.telemetry.metadata.ai_spans.session_id',
+  'vercel.ai.metadata.ai_spans.session_id',
+  'metadata.ai_spans.session_id',
+  'ai_spans.session_id',
+  'session.id',
+  'conversation.id',
+];
 const PROMPT_TOKEN_KEYS = ['gen_ai.usage.input_tokens', 'ai.usage.promptTokens', 'prompt_tokens', 'usage.prompt_tokens'];
 const COMPLETION_TOKEN_KEYS = ['gen_ai.usage.output_tokens', 'ai.usage.completionTokens', 'completion_tokens', 'usage.completion_tokens'];
 const TOTAL_TOKEN_KEYS = ['gen_ai.usage.total_tokens', 'ai.usage.totalTokens', 'total_tokens', 'usage.total_tokens'];
@@ -179,6 +197,8 @@ export function transformSpanToRow(span: ReadableSpan, config: AiSpansResolvedCo
   const provider = pickFirstString(attributes, PROVIDER_KEYS);
   const model = pickFirstString(attributes, MODEL_KEYS);
   const functionId = pickFirstString(attributes, FUNCTION_ID_KEYS);
+  const userId = pickFirstString(attributes, USER_ID_KEYS);
+  const sessionId = pickFirstString(attributes, SESSION_ID_KEYS);
   const promptTokens = pickFirstNumber(attributes, PROMPT_TOKEN_KEYS);
   const completionTokens = pickFirstNumber(attributes, COMPLETION_TOKEN_KEYS);
   const totalTokens = pickFirstNumber(attributes, TOTAL_TOKEN_KEYS);
@@ -207,6 +227,8 @@ export function transformSpanToRow(span: ReadableSpan, config: AiSpansResolvedCo
     app_route: appRoute,
     ai_operation: getAiOperation(span.name),
     function_id: functionId,
+    user_id: userId,
+    session_id: sessionId,
     provider,
     model,
     prompt_tokens: promptTokens,

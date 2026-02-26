@@ -1,5 +1,7 @@
 export interface AiSpansTelemetryOptions {
   functionId: string;
+  userId?: string;
+  sessionId?: string;
   metadata?: Record<string, string | number | boolean>;
   recordInputs?: boolean;
   recordOutputs?: boolean;
@@ -25,6 +27,14 @@ export function aiSpansTelemetry(options: AiSpansTelemetryOptions): {
   const metadata: Record<string, string | number | boolean> = {
     ...(options.metadata ?? {}),
   };
+
+  if (options.userId) {
+    metadata['ai_spans.user_id'] = options.userId;
+  }
+
+  if (options.sessionId) {
+    metadata['ai_spans.session_id'] = options.sessionId;
+  }
 
   if (options.tags?.length) {
     metadata['ai_spans.tags'] = options.tags.join(',');

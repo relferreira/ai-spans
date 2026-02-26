@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeFilters } from './sql';
+import { buildWhereClause, normalizeFilters } from './sql';
 
 describe('normalizeFilters', () => {
   it('falls back for non-finite limit/offset values', () => {
@@ -14,5 +14,17 @@ describe('normalizeFilters', () => {
 
     expect(filters.limit).toBe(500);
     expect(filters.offset).toBe(0);
+  });
+});
+
+describe('buildWhereClause', () => {
+  it('supports user and session filters', () => {
+    const where = buildWhereClause({
+      userId: 'user_1',
+      sessionId: 'session_1',
+    });
+
+    expect(where).toContain("user_id = 'user_1'");
+    expect(where).toContain("session_id = 'session_1'");
   });
 });
