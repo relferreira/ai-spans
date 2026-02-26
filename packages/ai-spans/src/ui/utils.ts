@@ -55,6 +55,15 @@ export function formatDate(value: string): string {
   return date.toLocaleString();
 }
 
+export function formatUsd(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return '-';
+  const decimals = value >= 0.01 ? 4 : 6;
+  const factor = 10 ** decimals;
+  const rounded = Math.round((value + Number.EPSILON) * factor) / factor;
+  if (rounded === 0) return '$0.000000';
+  return `$${rounded.toFixed(decimals)}`;
+}
+
 export function toDateTimeLocalValue(value?: string): string {
   if (!value) return '';
   const date = parseDateForDisplay(value);

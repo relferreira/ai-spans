@@ -29,6 +29,9 @@ export interface ObservationRow {
   promptTokens: number | null;
   completionTokens: number | null;
   totalTokens: number | null;
+  inputCostUsd: number | null;
+  outputCostUsd: number | null;
+  totalCostUsd: number | null;
   appRoute: string | null;
   contentRecorded: boolean;
 }
@@ -46,6 +49,7 @@ export interface OverviewMetrics {
   p50LatencyMs: number;
   p95LatencyMs: number;
   totalTokens: number;
+  totalCostUsd: number;
 }
 
 export interface TimeSeriesPoint {
@@ -80,6 +84,9 @@ export interface TraceSpanRow {
   promptTokens: number | null;
   completionTokens: number | null;
   totalTokens: number | null;
+  inputCostUsd: number | null;
+  outputCostUsd: number | null;
+  totalCostUsd: number | null;
   inputText: string | null;
   outputText: string | null;
   metadataJson: string;

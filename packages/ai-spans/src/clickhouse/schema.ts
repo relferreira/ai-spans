@@ -3,7 +3,7 @@ import { AI_SPANS_DEFAULT_TABLE } from '../config';
 import type { ClickHouseHttpClient } from './client';
 import { qualifiedTable, quoteIdentifier } from './sql';
 
-export const AI_SPANS_SCHEMA_VERSION = 2;
+export const AI_SPANS_SCHEMA_VERSION = 3;
 
 export async function ensureAiSpansSchema(client: ClickHouseHttpClient, config: AiSpansResolvedConfig): Promise<void> {
   const database = quoteIdentifier(config.clickhouse.database);
@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS ${table} (
   prompt_tokens Nullable(UInt32),
   completion_tokens Nullable(UInt32),
   total_tokens Nullable(UInt32),
+  input_cost_microusd Nullable(UInt64),
+  output_cost_microusd Nullable(UInt64),
+  total_cost_microusd Nullable(UInt64),
   input_text Nullable(String),
   output_text Nullable(String),
   content_recorded Bool,
@@ -62,6 +65,23 @@ SETTINGS index_granularity = 8192
     // Best-effort schema upgrade for existing tables.
   });
   await client.command(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS session_id Nullable(String) AFTER user_id`).catch(() => {
+    // Best-effort schema upgrade for existing tables.
+  });
+  await client.command(
+    `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS input_cost_microusd Nullable(UInt64) AFTER total_tokens`,
+  ).catch(
+    () => {
+      // Best-effort schema upgrade for existing tables.
+    },
+  );
+  await client.command(
+    `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS output_cost_microusd Nullable(UInt64) AFTER input_cost_microusd`,
+  ).catch(() => {
+    // Best-effort schema upgrade for existing tables.
+  });
+  await client.command(
+    `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS total_cost_microusd Nullable(UInt64) AFTER output_cost_microusd`,
+  ).catch(() => {
     // Best-effort schema upgrade for existing tables.
   });
 

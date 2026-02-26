@@ -2,6 +2,7 @@ import type { Attributes, HrTime } from '@opentelemetry/api';
 import type { ReadableSpan, TimedEvent } from '@opentelemetry/sdk-trace-base';
 import type { AiSpansResolvedConfig } from '../types';
 import { AI_SPANS_SCHEMA_VERSION } from '../clickhouse/schema';
+import { estimateCostMicrousd } from '../cost/pricing';
 
 export interface AiSpansRow {
   trace_id: string;
@@ -28,6 +29,9 @@ export interface AiSpansRow {
   prompt_tokens: number | null;
   completion_tokens: number | null;
   total_tokens: number | null;
+  input_cost_microusd: number | null;
+  output_cost_microusd: number | null;
+  total_cost_microusd: number | null;
   input_text: string | null;
   output_text: string | null;
   content_recorded: boolean;
@@ -202,6 +206,12 @@ export function transformSpanToRow(span: ReadableSpan, config: AiSpansResolvedCo
   const promptTokens = pickFirstNumber(attributes, PROMPT_TOKEN_KEYS);
   const completionTokens = pickFirstNumber(attributes, COMPLETION_TOKEN_KEYS);
   const totalTokens = pickFirstNumber(attributes, TOTAL_TOKEN_KEYS);
+  const estimatedCost = estimateCostMicrousd({
+    provider,
+    model,
+    promptTokens,
+    completionTokens,
+  });
 
   const serviceName = String(resourceAttributes['service.name'] ?? config.serviceName);
   const deploymentEnv = String(resourceAttributes['deployment.environment.name'] ?? config.environment);
@@ -234,6 +244,9 @@ export function transformSpanToRow(span: ReadableSpan, config: AiSpansResolvedCo
     prompt_tokens: promptTokens,
     completion_tokens: completionTokens,
     total_tokens: totalTokens,
+    input_cost_microusd: estimatedCost?.inputCostMicrousd ?? null,
+    output_cost_microusd: estimatedCost?.outputCostMicrousd ?? null,
+    total_cost_microusd: estimatedCost?.totalCostMicrousd ?? null,
     input_text: inputText,
     output_text: outputText,
     content_recorded: contentRecorded,

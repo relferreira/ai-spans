@@ -34,6 +34,11 @@ function asString(value: unknown): string | null {
   return String(value);
 }
 
+function microusdToUsd(value: unknown): number | null {
+  if (value == null) return null;
+  return asNumber(value, 0) / 1_000_000;
+}
+
 export class ClickHouseAiSpansStorageAdapter implements AiSpansStorageAdapter {
   readonly config: AiSpansResolvedConfig;
   private readonly client: ClickHouseHttpClient;
@@ -76,6 +81,9 @@ export class ClickHouseAiSpansStorageAdapter implements AiSpansStorageAdapter {
           prompt_tokens AS promptTokens,
           completion_tokens AS completionTokens,
           total_tokens AS totalTokens,
+          input_cost_microusd AS inputCostMicrousd,
+          output_cost_microusd AS outputCostMicrousd,
+          total_cost_microusd AS totalCostMicrousd,
           app_route AS appRoute,
           content_recorded AS contentRecorded
         FROM ${table}
@@ -110,6 +118,9 @@ export class ClickHouseAiSpansStorageAdapter implements AiSpansStorageAdapter {
         promptTokens: row.promptTokens == null ? null : asNumber(row.promptTokens),
         completionTokens: row.completionTokens == null ? null : asNumber(row.completionTokens),
         totalTokens: row.totalTokens == null ? null : asNumber(row.totalTokens),
+        inputCostUsd: microusdToUsd(row.inputCostMicrousd),
+        outputCostUsd: microusdToUsd(row.outputCostMicrousd),
+        totalCostUsd: microusdToUsd(row.totalCostMicrousd),
         appRoute: asString(row.appRoute),
         contentRecorded: Boolean(row.contentRecorded),
       } satisfies ObservationRow)),
@@ -141,6 +152,9 @@ export class ClickHouseAiSpansStorageAdapter implements AiSpansStorageAdapter {
         prompt_tokens AS promptTokens,
         completion_tokens AS completionTokens,
         total_tokens AS totalTokens,
+        input_cost_microusd AS inputCostMicrousd,
+        output_cost_microusd AS outputCostMicrousd,
+        total_cost_microusd AS totalCostMicrousd,
         input_text AS inputText,
         output_text AS outputText,
         metadata_json AS metadataJson,
@@ -172,6 +186,9 @@ export class ClickHouseAiSpansStorageAdapter implements AiSpansStorageAdapter {
         promptTokens: row.promptTokens == null ? null : asNumber(row.promptTokens),
         completionTokens: row.completionTokens == null ? null : asNumber(row.completionTokens),
         totalTokens: row.totalTokens == null ? null : asNumber(row.totalTokens),
+        inputCostUsd: microusdToUsd(row.inputCostMicrousd),
+        outputCostUsd: microusdToUsd(row.outputCostMicrousd),
+        totalCostUsd: microusdToUsd(row.totalCostMicrousd),
         inputText: asString(row.inputText),
         outputText: asString(row.outputText),
         metadataJson: String(row.metadataJson ?? '{}'),
@@ -191,7 +208,8 @@ export class ClickHouseAiSpansStorageAdapter implements AiSpansStorageAdapter {
         avg(duration_ms) AS avgLatencyMs,
         quantileTDigest(0.5)(duration_ms) AS p50LatencyMs,
         quantileTDigest(0.95)(duration_ms) AS p95LatencyMs,
-        sumOrNull(total_tokens) AS totalTokens
+        sumOrNull(total_tokens) AS totalTokens,
+        sumOrNull(total_cost_microusd) AS totalCostMicrousd
       FROM ${this.tableRef()}
       ${where}
     `.trim());
@@ -207,6 +225,7 @@ export class ClickHouseAiSpansStorageAdapter implements AiSpansStorageAdapter {
       p50LatencyMs: asNumber(row.p50LatencyMs, 0),
       p95LatencyMs: asNumber(row.p95LatencyMs, 0),
       totalTokens: asNumber(row.totalTokens, 0),
+      totalCostUsd: asNumber(row.totalCostMicrousd, 0) / 1_000_000,
     };
   }
 

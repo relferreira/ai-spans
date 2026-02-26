@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { formatDate, parseObservationSearchParams, toDateTimeLocalValue } from './utils';
+import { formatDate, formatUsd, parseObservationSearchParams, toDateTimeLocalValue } from './utils';
 
 describe('parseObservationSearchParams', () => {
   it('omits absent keys so default filters are preserved', () => {
@@ -50,5 +50,13 @@ describe('date formatting helpers', () => {
   it('converts ClickHouse UTC timestamp to datetime-local value using local timezone', () => {
     const value = toDateTimeLocalValue('2026-02-26 12:34:56.789');
     expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+  });
+});
+
+describe('currency formatting', () => {
+  it('formats small USD values with enough precision', () => {
+    expect(formatUsd(0.0000235)).toBe('$0.000024');
+    expect(formatUsd(0.123456)).toBe('$0.1235');
+    expect(formatUsd(null)).toBe('-');
   });
 });

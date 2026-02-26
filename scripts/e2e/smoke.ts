@@ -250,6 +250,23 @@ async function getSpanCountForFunction(db, functionId) {
   return Number.parseInt(count, 10);
 }
 
+async function getEstimatedCostedSpanCountForFunction(db, functionId) {
+  const tableExists = await clickHouseQueryText(db, 'EXISTS TABLE ai_sdk_spans_v1');
+  if (tableExists !== '1') return 0;
+  const escaped = functionId.replaceAll("'", "''");
+  try {
+    const count = await clickHouseQueryText(
+      db,
+      `SELECT count() FROM ai_sdk_spans_v1 WHERE function_id = '${escaped}' AND total_cost_microusd IS NOT NULL`,
+    );
+    return Number.parseInt(count, 10);
+  } catch (error) {
+    // Older local tables may not have the cost columns yet; schema auto-upgrade runs when the app starts.
+    if (String(error).includes('Unknown expression or function identifier `total_cost_microusd`')) return 0;
+    throw error;
+  }
+}
+
 async function waitForSpanCountIncrease(db, functionId, baseline, timeoutMs = 30_000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -258,6 +275,18 @@ async function waitForSpanCountIncrease(db, functionId, baseline, timeoutMs = 30
     await delay(1_000);
   }
   throw new Error(`Timed out waiting for ClickHouse rows for function_id=${functionId} to exceed baseline ${baseline}`);
+}
+
+async function waitForEstimatedCostedSpanCountIncrease(db, functionId, baseline, timeoutMs = 30_000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const count = await getEstimatedCostedSpanCountForFunction(db, functionId);
+    if (Number.isFinite(count) && count > baseline) return count;
+    await delay(1_000);
+  }
+  throw new Error(
+    `Timed out waiting for ClickHouse estimated cost rows for function_id=${functionId} to exceed baseline ${baseline}`,
+  );
 }
 
 async function postChatMessage(port, prompt) {
@@ -316,7 +345,9 @@ async function main() {
   await runCommand('npm', ['run', 'build', '-w', 'ai-spans'], { cwd: ROOT_DIR });
 
   const baseline = await getSpanCountForFunction(db, 'chat.stream');
+  const baselineCosted = await getEstimatedCostedSpanCountForFunction(db, 'chat.stream');
   log('Baseline ClickHouse row count for chat.stream', { baseline });
+  log('Baseline costed row count for chat.stream', { baselineCosted });
 
   const requestedPort = process.env.AI_SPANS_E2E_PORT ? Number(process.env.AI_SPANS_E2E_PORT) : undefined;
   const port = await findFreePort(requestedPort);
@@ -346,12 +377,15 @@ async function main() {
     const afterCount = await waitForSpanCountIncrease(db, 'chat.stream', baseline, 45_000);
     log('ClickHouse row count increased', { baseline, afterCount });
 
+    const afterCostedCount = await waitForEstimatedCostedSpanCountIncrease(db, 'chat.stream', baselineCosted, 45_000);
+    log('ClickHouse costed row count increased', { baselineCosted, afterCostedCount });
+
     const ui = await fetchWithTimeout(`http://127.0.0.1:${port}/admin/ai-observability`, {}, 30_000);
     const uiHtml = await ui.text();
     if (!ui.ok) {
       throw new Error(`Observability page failed (${ui.status})`);
     }
-    if (!uiHtml.includes('AI Observability') || !uiHtml.includes('Recent Observations')) {
+    if (!uiHtml.includes('AI Observability') || !uiHtml.includes('Recent Observations') || !uiHtml.includes('Total Cost (USD)')) {
       throw new Error('Observability page did not contain expected content');
     }
     log('Observability UI rendered successfully');

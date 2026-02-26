@@ -28,8 +28,8 @@ describe('transformSpanToRow', () => {
         startTime: [1_700_000_000, 0],
         endTime: [1_700_000_000, 50_000_000],
         attributes: {
-          'gen_ai.system': 'openai',
-          'gen_ai.request.model': 'gpt-4o-mini',
+          'gen_ai.system': 'anthropic.messages',
+          'gen_ai.request.model': 'claude-3-haiku-20240307',
           'gen_ai.usage.input_tokens': 12,
           'gen_ai.usage.output_tokens': 34,
           'gen_ai.usage.total_tokens': 46,
@@ -54,12 +54,15 @@ describe('transformSpanToRow', () => {
       baseConfig,
     );
 
-    expect(row.provider).toBe('openai');
-    expect(row.model).toBe('gpt-4o-mini');
+    expect(row.provider).toBe('anthropic.messages');
+    expect(row.model).toBe('claude-3-haiku-20240307');
     expect(row.function_id).toBe('chat.generate');
     expect(row.user_id).toBe('user_1');
     expect(row.session_id).toBe('session_1');
     expect(row.prompt_tokens).toBe(12);
+    expect(row.input_cost_microusd).toBeGreaterThan(0);
+    expect(row.output_cost_microusd).toBeGreaterThan(0);
+    expect(row.total_cost_microusd).toBe((row.input_cost_microusd ?? 0) + (row.output_cost_microusd ?? 0));
     expect(row.output_text).toBe('world');
     expect(row.content_recorded).toBe(true);
     expect(JSON.parse(row.metadata_json)).toMatchObject({ 'ai.telemetry.metadata.userId': 'u_1' });
@@ -87,5 +90,6 @@ describe('transformSpanToRow', () => {
     expect(row.input_text).toBeNull();
     expect(row.output_text).toBeNull();
     expect(row.content_recorded).toBe(false);
+    expect(row.total_cost_microusd).toBeNull();
   });
 });

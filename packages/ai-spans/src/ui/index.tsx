@@ -2,7 +2,7 @@ import React, { type ReactNode } from 'react';
 import { createAiSpansQueryClient, type AiSpansQueryClient } from '../query/client';
 import type { ObservationFilters } from '../query/types';
 import type { AiSpansConfig, AiSpansContentMode } from '../types';
-import { formatDate, parseObservationSearchParams, toDateTimeLocalValue } from './utils';
+import { formatDate, formatUsd, parseObservationSearchParams, toDateTimeLocalValue } from './utils';
 
 export interface AiObservabilityPageProps {
   authCheck?: () => Promise<void> | void;
@@ -177,6 +177,7 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
             <MetricCard label="P50 Latency" value={formatMs(metrics.p50LatencyMs)} />
             <MetricCard label="P95 Latency" value={formatMs(metrics.p95LatencyMs)} />
             <MetricCard label="Total Tokens" value={metrics.totalTokens.toLocaleString()} />
+            <MetricCard label="Total Cost (USD)" value={formatUsd(metrics.totalCostUsd)} />
           </section>
 
           <section style={panelStyle}>
@@ -252,6 +253,7 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
                   <th style={thtdStyle}>Provider/Model</th>
                   <th style={thtdStyle}>Latency</th>
                   <th style={thtdStyle}>Tokens</th>
+                  <th style={thtdStyle}>Cost (USD)</th>
                   <th style={thtdStyle}>Status</th>
                   <th style={thtdStyle}>Trace</th>
                 </tr>
@@ -259,7 +261,7 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
               <tbody>
                 {observations.rows.length === 0 ? (
                   <tr>
-                    <td colSpan={10} style={thtdStyle}>No observations found.</td>
+                    <td colSpan={11} style={thtdStyle}>No observations found.</td>
                   </tr>
                 ) : (
                   observations.rows.map((row) => (
@@ -272,6 +274,7 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
                       <td style={thtdStyle}>{[row.provider, row.model].filter(Boolean).join(' / ') || '-'}</td>
                       <td style={thtdStyle}>{formatMs(row.durationMs)}</td>
                       <td style={thtdStyle}>{row.totalTokens ?? '-'}</td>
+                      <td style={thtdStyle}>{formatUsd(row.totalCostUsd)}</td>
                       <td style={thtdStyle}>{row.statusCode > 0 ? `ERR ${row.statusCode}` : 'OK'}</td>
                       <td style={thtdStyle}>
                         <a href={`${basePath}/trace/${encodeURIComponent(row.traceId)}`}>View trace</a>
@@ -330,6 +333,7 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
                 <th style={thtdStyle}>Latency</th>
                 <th style={thtdStyle}>Status</th>
                 <th style={thtdStyle}>Tokens</th>
+                <th style={thtdStyle}>Cost (USD)</th>
               </tr>
             </thead>
             <tbody>
@@ -344,6 +348,7 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
                   <td style={thtdStyle}>{formatMs(span.durationMs)}</td>
                   <td style={thtdStyle}>{span.statusCode > 0 ? `ERR ${span.statusCode}` : 'OK'}</td>
                   <td style={thtdStyle}>{span.totalTokens ?? '-'}</td>
+                  <td style={thtdStyle}>{formatUsd(span.totalCostUsd)}</td>
                 </tr>
               ))}
             </tbody>
@@ -355,6 +360,9 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
             <h2 style={{ marginTop: 0 }}>{span.spanName}</h2>
             <p style={{ marginTop: 0, color: '#4b5563' }}>
               {formatDate(span.startTime)} | {formatMs(span.durationMs)} | {span.statusCode > 0 ? `ERR ${span.statusCode}` : 'OK'}
+            </p>
+            <p style={{ marginTop: 0, color: '#4b5563' }}>
+              Tokens: {span.totalTokens ?? '-'} | Cost: {formatUsd(span.totalCostUsd)}
             </p>
             {props.contentMode !== 'none' ? (
               <>
