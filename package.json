@@ -1,0 +1,22 @@
+{
+  "name": "ai-spans-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@10.2.3",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "tsx scripts/e2e/smoke.ts",
+    "dev": "turbo run dev --parallel",
+    "dev:demo": "turbo run dev --filter=ai-spans-nextjs-ai-sdk-v6-demo"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "turbo": "^2.5.6"
+  }
+}

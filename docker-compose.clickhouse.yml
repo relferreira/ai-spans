@@ -1,0 +1,23 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: ai-spans-clickhouse
+    restart: unless-stopped
+    ports:
+      - '8123:8123'
+      - '9000:9000'
+    environment:
+      CLICKHOUSE_DB: ai_spans
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-clickhouse_password}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ai_spans_clickhouse_data:/var/lib/clickhouse
+      - ai_spans_clickhouse_logs:/var/log/clickhouse-server
+
+volumes:
+  ai_spans_clickhouse_data:
+  ai_spans_clickhouse_logs:
