@@ -1,16 +1,68 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useChat } from '@ai-sdk/react';
 
-function partsToText(parts: { type: string; text?: string }[] | undefined): string {
-  if (!parts?.length) return '';
-  return parts
-    .map((part) => {
-      if (part.type === 'text') return part.text ?? '';
-      return `[${part.type}]`;
-    })
-    .join('');
+function formatJson(value: unknown): string {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function renderMessagePart(part: any, index: number): ReactNode {
+  if (part?.type === 'text') {
+    return <pre key={index}>{part.text ?? ''}</pre>;
+  }
+
+  if (typeof part?.type === 'string' && part.type.startsWith('tool-')) {
+    const toolName = part.type.slice('tool-'.length) || 'unknown';
+    const state = part.state ?? (part.output != null ? 'output-available' : 'input-available');
+
+    return (
+      <section
+        key={index}
+        style={{
+          border: '1px solid #d1d5db',
+          borderRadius: 10,
+          padding: 10,
+          background: '#f8fafc',
+          display: 'grid',
+          gap: 8,
+        }}
+      >
+        <div style={{ fontWeight: 600 }}>Tool: {toolName}</div>
+        <div className="kv">State: {state}</div>
+        {'input' in part ? (
+          <div>
+            <div className="kv">Input</div>
+            <pre>{formatJson(part.input)}</pre>
+          </div>
+        ) : null}
+        {'output' in part ? (
+          <div>
+            <div className="kv">Output</div>
+            <pre>{formatJson(part.output)}</pre>
+          </div>
+        ) : null}
+        {'errorText' in part && part.errorText ? (
+          <div>
+            <div className="kv">Error</div>
+            <pre>{String(part.errorText)}</pre>
+          </div>
+        ) : null}
+      </section>
+    );
+  }
+
+  return (
+    <pre key={index}>
+      [{String(part?.type ?? 'unknown')}]
+      {'\n'}
+      {formatJson(part)}
+    </pre>
+  );
 }
 
 const DEMO_USER_ID = 'demo_user_1';
@@ -54,7 +106,7 @@ export function ChatDemo() {
           messages.map((message) => (
             <article key={message.id} className={`message ${message.role === 'user' ? 'user' : ''}`}>
               <div className="role">{message.role}</div>
-              <pre>{partsToText(message.parts as any)}</pre>
+              <div className="col">{(message.parts as any[] | undefined)?.map((part, index) => renderMessagePart(part, index))}</div>
             </article>
           ))
         )}
