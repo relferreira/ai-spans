@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 
 function formatJson(value: unknown): string {
@@ -11,49 +11,9 @@ function formatJson(value: unknown): string {
   }
 }
 
-function renderMessagePart(part: any, index: number): ReactNode {
+function renderMessagePart(part: any, index: number) {
   if (part?.type === 'text') {
     return <pre key={index}>{part.text ?? ''}</pre>;
-  }
-
-  if (typeof part?.type === 'string' && part.type.startsWith('tool-')) {
-    const toolName = part.type.slice('tool-'.length) || 'unknown';
-    const state = part.state ?? (part.output != null ? 'output-available' : 'input-available');
-
-    return (
-      <section
-        key={index}
-        style={{
-          border: '1px solid #d1d5db',
-          borderRadius: 10,
-          padding: 10,
-          background: '#f8fafc',
-          display: 'grid',
-          gap: 8,
-        }}
-      >
-        <div style={{ fontWeight: 600 }}>Tool: {toolName}</div>
-        <div className="kv">State: {state}</div>
-        {'input' in part ? (
-          <div>
-            <div className="kv">Input</div>
-            <pre>{formatJson(part.input)}</pre>
-          </div>
-        ) : null}
-        {'output' in part ? (
-          <div>
-            <div className="kv">Output</div>
-            <pre>{formatJson(part.output)}</pre>
-          </div>
-        ) : null}
-        {'errorText' in part && part.errorText ? (
-          <div>
-            <div className="kv">Error</div>
-            <pre>{String(part.errorText)}</pre>
-          </div>
-        ) : null}
-      </section>
-    );
   }
 
   return (
@@ -73,11 +33,6 @@ export function ChatDemo() {
   const { messages, sendMessage, status, error, stop } = useChat();
 
   const canSend = input.trim().length > 0 && status !== 'submitted' && status !== 'streaming';
-  const statusLabel = useMemo(() => {
-    if (status === 'submitted') return 'Sending...';
-    if (status === 'streaming') return 'Streaming...';
-    return 'Idle';
-  }, [status]);
 
   return (
     <div className="shell">
@@ -86,14 +41,14 @@ export function ChatDemo() {
           <div>
             <h1 style={{ margin: 0 }}>AI SDK v6 + Anthropic + ai-spans</h1>
             <p style={{ margin: '6px 0 0', color: 'var(--muted)' }}>
-              Send a chat message. The route uses AI SDK v6 and records telemetry to ClickHouse via <code>ai-spans</code>.
+              Ask for weather to trigger a tool call. Telemetry is recorded to ClickHouse via <code>ai-spans</code>.
             </p>
           </div>
           <div className="row wrap">
             <a href="/admin/ai-observability">Open observability UI</a>
           </div>
         </div>
-        <div className="kv">Status: {statusLabel}</div>
+        <div className="kv">Status: {status}</div>
         <div className="kv">User ID: {DEMO_USER_ID}</div>
         <div className="kv">Session ID: {DEMO_SESSION_ID}</div>
         {error ? <div style={{ color: '#b91c1c' }}>Error: {error.message}</div> : null}
