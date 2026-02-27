@@ -144,6 +144,14 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
                 <input name="provider" defaultValue={filters.provider ?? ''} style={{ width: '100%' }} />
               </label>
               <label>
+                <div>Observation Type</div>
+                <input name="observationType" defaultValue={filters.observationType ?? ''} style={{ width: '100%' }} />
+              </label>
+              <label>
+                <div>Tool Name</div>
+                <input name="toolName" defaultValue={filters.toolName ?? ''} style={{ width: '100%' }} />
+              </label>
+              <label>
                 <div>Model</div>
                 <input name="model" defaultValue={filters.model ?? ''} style={{ width: '100%' }} />
               </label>
@@ -246,7 +254,9 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
               <thead>
                 <tr>
                   <th style={thtdStyle}>Start</th>
+                  <th style={thtdStyle}>Type</th>
                   <th style={thtdStyle}>Span</th>
+                  <th style={thtdStyle}>Tool</th>
                   <th style={thtdStyle}>Function</th>
                   <th style={thtdStyle}>User</th>
                   <th style={thtdStyle}>Session</th>
@@ -261,13 +271,15 @@ export async function AiObservabilityPage(props: AiObservabilityPageProps): Prom
               <tbody>
                 {observations.rows.length === 0 ? (
                   <tr>
-                    <td colSpan={11} style={thtdStyle}>No observations found.</td>
+                    <td colSpan={13} style={thtdStyle}>No observations found.</td>
                   </tr>
                 ) : (
                   observations.rows.map((row) => (
                     <tr key={`${row.traceId}:${row.spanId}`}>
                       <td style={thtdStyle}>{formatDate(row.startTime)}</td>
+                      <td style={thtdStyle}>{row.observationType}</td>
                       <td style={thtdStyle}>{row.spanName}</td>
+                      <td style={thtdStyle}>{row.toolName ?? '-'}</td>
                       <td style={thtdStyle}>{row.functionId ?? '-'}</td>
                       <td style={thtdStyle}>{row.userId ?? '-'}</td>
                       <td style={thtdStyle}>{row.sessionId ?? '-'}</td>
@@ -325,7 +337,9 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
             <thead>
               <tr>
                 <th style={thtdStyle}>Start</th>
+                <th style={thtdStyle}>Type</th>
                 <th style={thtdStyle}>Span</th>
+                <th style={thtdStyle}>Tool</th>
                 <th style={thtdStyle}>Function</th>
                 <th style={thtdStyle}>User</th>
                 <th style={thtdStyle}>Session</th>
@@ -340,7 +354,9 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
               {trace.spans.map((span) => (
                 <tr key={span.spanId}>
                   <td style={thtdStyle}>{formatDate(span.startTime)}</td>
+                  <td style={thtdStyle}>{span.observationType}</td>
                   <td style={thtdStyle}>{span.spanName}</td>
+                  <td style={thtdStyle}>{span.toolName ?? '-'}</td>
                   <td style={thtdStyle}>{span.functionId ?? '-'}</td>
                   <td style={thtdStyle}>{span.userId ?? '-'}</td>
                   <td style={thtdStyle}>{span.sessionId ?? '-'}</td>
@@ -364,12 +380,18 @@ export async function AiTracePage(props: AiTracePageProps): Promise<React.JSX.El
             <p style={{ marginTop: 0, color: '#4b5563' }}>
               Tokens: {span.totalTokens ?? '-'} | Cost: {formatUsd(span.totalCostUsd)}
             </p>
+            <p style={{ marginTop: 0, color: '#4b5563' }}>
+              Type: {span.observationType} | Tool: {span.toolName ?? '-'}
+            </p>
             {props.contentMode !== 'none' ? (
               <>
                 {renderJsonBlock('Input', span.inputText)}
                 {renderJsonBlock('Output', span.outputText)}
               </>
             ) : null}
+            {renderJsonBlock('Tool Input JSON', span.toolInputJson)}
+            {renderJsonBlock('Tool Output JSON', span.toolOutputJson)}
+            {renderJsonBlock('Tool Error', span.toolError)}
             {renderJsonBlock('Metadata JSON', span.metadataJson)}
             {renderJsonBlock('Attributes JSON', span.attributesJson)}
             {renderJsonBlock('Events JSON', span.eventsJson)}

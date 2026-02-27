@@ -56,6 +56,7 @@ describe('transformSpanToRow', () => {
 
     expect(row.provider).toBe('anthropic.messages');
     expect(row.model).toBe('claude-3-haiku-20240307');
+    expect(row.observation_type).toBe('model_request');
     expect(row.function_id).toBe('chat.generate');
     expect(row.user_id).toBe('user_1');
     expect(row.session_id).toBe('session_1');
@@ -91,5 +92,39 @@ describe('transformSpanToRow', () => {
     expect(row.output_text).toBeNull();
     expect(row.content_recorded).toBe(false);
     expect(row.total_cost_microusd).toBeNull();
+    expect(row.observation_type).toBe('model_request');
+    expect(row.tool_name).toBeNull();
+    expect(row.tool_input_json).toBeNull();
+    expect(row.tool_output_json).toBeNull();
+  });
+
+  it('extracts typed tool-call fields', () => {
+    const row = transformSpanToRow(
+      {
+        name: 'ai.toolCall',
+        kind: 1,
+        startTime: [1_700_000_100, 0],
+        endTime: [1_700_000_100, 25_000_000],
+        attributes: {
+          'ai.toolCall.name': 'weather',
+          'ai.toolCall.id': 'tool_123',
+          'ai.toolCall.args': '{"location":"San Francisco"}',
+          'ai.toolCall.result': '{"temperatureC":22,"condition":"sunny"}',
+          'ai.telemetry.functionId': 'chat.stream',
+        },
+        resource: { attributes: {} },
+        events: [],
+        status: { code: 0 },
+        spanContext: () => ({ traceId: 't3', spanId: 's3', traceFlags: 1 }),
+      } as any,
+      baseConfig,
+    );
+
+    expect(row.observation_type).toBe('tool');
+    expect(row.tool_name).toBe('weather');
+    expect(row.tool_id).toBe('tool_123');
+    expect(row.tool_input_json).toBe('{"location":"San Francisco"}');
+    expect(row.tool_output_json).toBe('{"temperatureC":22,"condition":"sunny"}');
+    expect(row.tool_error).toBeNull();
   });
 });

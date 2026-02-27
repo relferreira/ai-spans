@@ -21,6 +21,12 @@ export interface AiSpansRow {
   vercel_region: string | null;
   app_route: string | null;
   ai_operation: string;
+  observation_type: string;
+  tool_name: string | null;
+  tool_id: string | null;
+  tool_input_json: string | null;
+  tool_output_json: string | null;
+  tool_error: string | null;
   function_id: string | null;
   user_id: string | null;
   session_id: string | null;
@@ -67,6 +73,11 @@ const COMPLETION_TOKEN_KEYS = ['gen_ai.usage.output_tokens', 'ai.usage.completio
 const TOTAL_TOKEN_KEYS = ['gen_ai.usage.total_tokens', 'ai.usage.totalTokens', 'total_tokens', 'usage.total_tokens'];
 const INPUT_KEYS = ['ai.input', 'ai.prompt', 'ai.prompt.text', 'gen_ai.input.messages', 'input', 'prompt'];
 const OUTPUT_KEYS = ['ai.output', 'ai.response', 'ai.output.text', 'gen_ai.output', 'output', 'completion', 'response'];
+const TOOL_NAME_KEYS = ['ai.toolCall.name', 'ai.tool.name', 'tool.name'];
+const TOOL_ID_KEYS = ['ai.toolCall.id', 'ai.tool.id', 'tool.id'];
+const TOOL_INPUT_KEYS = ['ai.toolCall.args', 'ai.toolCall.input', 'tool.input'];
+const TOOL_OUTPUT_KEYS = ['ai.toolCall.result', 'ai.toolCall.output', 'tool.output'];
+const TOOL_ERROR_KEYS = ['ai.toolCall.error', 'tool.error', 'exception.message'];
 const ROUTE_KEYS = ['http.route', 'next.route', 'nextjs.route'];
 const REGION_KEYS = ['vercel.region', 'cloud.region'];
 
@@ -184,6 +195,16 @@ function getAiOperation(spanName: string): string {
   return segment || 'unknown';
 }
 
+function getObservationType(spanName: string): string {
+  if (spanName.startsWith('ai.toolCall')) return 'tool';
+  if (spanName.startsWith('ai.generateText') || spanName.startsWith('ai.streamText')) {
+    return spanName.includes('.do') ? 'model_execution' : 'model_request';
+  }
+  if (spanName.startsWith('ai.embed')) return 'embedding';
+  if (spanName.startsWith('ai.')) return 'ai_step';
+  return 'unknown';
+}
+
 export function transformSpanToRow(span: ReadableSpan, config: AiSpansResolvedConfig): AiSpansRow {
   const attributes = span.attributes ?? {};
   const resourceAttributes = span.resource.attributes ?? {};
@@ -206,6 +227,11 @@ export function transformSpanToRow(span: ReadableSpan, config: AiSpansResolvedCo
   const promptTokens = pickFirstNumber(attributes, PROMPT_TOKEN_KEYS);
   const completionTokens = pickFirstNumber(attributes, COMPLETION_TOKEN_KEYS);
   const totalTokens = pickFirstNumber(attributes, TOTAL_TOKEN_KEYS);
+  const toolName = pickFirstString(attributes, TOOL_NAME_KEYS);
+  const toolId = pickFirstString(attributes, TOOL_ID_KEYS);
+  const toolInputJson = pickFirstString(attributes, TOOL_INPUT_KEYS);
+  const toolOutputJson = pickFirstString(attributes, TOOL_OUTPUT_KEYS);
+  const toolError = pickFirstString(attributes, TOOL_ERROR_KEYS);
   const estimatedCost = estimateCostMicrousd({
     provider,
     model,
@@ -236,6 +262,12 @@ export function transformSpanToRow(span: ReadableSpan, config: AiSpansResolvedCo
     vercel_region: vercelRegion,
     app_route: appRoute,
     ai_operation: getAiOperation(span.name),
+    observation_type: getObservationType(span.name),
+    tool_name: toolName,
+    tool_id: toolId,
+    tool_input_json: toolInputJson,
+    tool_output_json: toolOutputJson,
+    tool_error: toolError,
     function_id: functionId,
     user_id: userId,
     session_id: sessionId,

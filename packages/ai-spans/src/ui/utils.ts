@@ -24,6 +24,12 @@ export function parseObservationSearchParams(
 
   if (hasSearchParam(searchParams, 'from')) parsed.from = getSearchParam(searchParams, 'from');
   if (hasSearchParam(searchParams, 'to')) parsed.to = getSearchParam(searchParams, 'to');
+  if (hasSearchParam(searchParams, 'observationType')) {
+    parsed.observationType = getSearchParam(searchParams, 'observationType') || undefined;
+  }
+  if (hasSearchParam(searchParams, 'toolName')) {
+    parsed.toolName = getSearchParam(searchParams, 'toolName') || undefined;
+  }
   if (hasSearchParam(searchParams, 'provider')) parsed.provider = getSearchParam(searchParams, 'provider') || undefined;
   if (hasSearchParam(searchParams, 'model')) parsed.model = getSearchParam(searchParams, 'model') || undefined;
   if (hasSearchParam(searchParams, 'functionId')) parsed.functionId = getSearchParam(searchParams, 'functionId') || undefined;

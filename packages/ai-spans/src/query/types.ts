@@ -1,6 +1,8 @@
 export interface ObservationFilters {
   from?: string;
   to?: string;
+  observationType?: string;
+  toolName?: string;
   provider?: string;
   model?: string;
   functionId?: string;
@@ -16,6 +18,8 @@ export interface ObservationRow {
   spanId: string;
   parentSpanId: string | null;
   spanName: string;
+  observationType: string;
+  toolName: string | null;
   startTime: string;
   endTime: string;
   durationMs: number;
@@ -71,6 +75,12 @@ export interface TraceSpanRow {
   spanId: string;
   parentSpanId: string | null;
   spanName: string;
+  observationType: string;
+  toolName: string | null;
+  toolId: string | null;
+  toolInputJson: string | null;
+  toolOutputJson: string | null;
+  toolError: string | null;
   startTime: string;
   endTime: string;
   durationMs: number;

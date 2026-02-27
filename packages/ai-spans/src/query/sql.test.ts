@@ -27,4 +27,14 @@ describe('buildWhereClause', () => {
     expect(where).toContain("user_id = 'user_1'");
     expect(where).toContain("session_id = 'session_1'");
   });
+
+  it('supports observation type and tool name filters', () => {
+    const where = buildWhereClause({
+      observationType: 'tool',
+      toolName: 'weather',
+    });
+
+    expect(where).toContain("observation_type = 'tool'");
+    expect(where).toContain("tool_name = 'weather'");
+  });
 });

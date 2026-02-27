@@ -27,10 +27,14 @@ describe('parseObservationSearchParams', () => {
     const parsed = parseObservationSearchParams({
       userId: 'user_42',
       sessionId: 'sess_42',
+      observationType: 'tool',
+      toolName: 'weather',
     });
 
     expect(parsed.userId).toBe('user_42');
     expect(parsed.sessionId).toBe('sess_42');
+    expect(parsed.observationType).toBe('tool');
+    expect(parsed.toolName).toBe('weather');
   });
 });
 

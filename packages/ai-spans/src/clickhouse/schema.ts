@@ -3,7 +3,7 @@ import { AI_SPANS_DEFAULT_TABLE } from '../config';
 import type { ClickHouseHttpClient } from './client';
 import { qualifiedTable, quoteIdentifier } from './sql';
 
-export const AI_SPANS_SCHEMA_VERSION = 3;
+export const AI_SPANS_SCHEMA_VERSION = 4;
 
 export async function ensureAiSpansSchema(client: ClickHouseHttpClient, config: AiSpansResolvedConfig): Promise<void> {
   const database = quoteIdentifier(config.clickhouse.database);
@@ -33,6 +33,12 @@ CREATE TABLE IF NOT EXISTS ${table} (
   vercel_region Nullable(String),
   app_route Nullable(String),
   ai_operation LowCardinality(String),
+  observation_type LowCardinality(String),
+  tool_name LowCardinality(Nullable(String)),
+  tool_id Nullable(String),
+  tool_input_json Nullable(String),
+  tool_output_json Nullable(String),
+  tool_error Nullable(String),
   function_id Nullable(String),
   user_id Nullable(String),
   session_id Nullable(String),
@@ -61,29 +67,8 @@ ${ttlClause}
 SETTINGS index_granularity = 8192
 `.trim());
 
-  await client.command(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS user_id Nullable(String) AFTER function_id`).catch(() => {
-    // Best-effort schema upgrade for existing tables.
-  });
-  await client.command(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS session_id Nullable(String) AFTER user_id`).catch(() => {
-    // Best-effort schema upgrade for existing tables.
-  });
-  await client.command(
-    `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS input_cost_microusd Nullable(UInt64) AFTER total_tokens`,
-  ).catch(
-    () => {
-      // Best-effort schema upgrade for existing tables.
-    },
-  );
-  await client.command(
-    `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS output_cost_microusd Nullable(UInt64) AFTER input_cost_microusd`,
-  ).catch(() => {
-    // Best-effort schema upgrade for existing tables.
-  });
-  await client.command(
-    `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS total_cost_microusd Nullable(UInt64) AFTER output_cost_microusd`,
-  ).catch(() => {
-    // Best-effort schema upgrade for existing tables.
-  });
+  // Pre-release schema mode: create-only setup.
+  // After first public release, introduce explicit ALTER-based migrations here for additive updates.
 
   if (config.retentionDays) {
     await client.command(

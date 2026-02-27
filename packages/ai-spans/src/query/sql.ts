@@ -26,6 +26,8 @@ export function buildWhereClause(filters: ObservationFilters): string {
 
   if (filters.from) clauses.push(`start_time >= ${escapeDateTimeLiteral(filters.from)}`);
   if (filters.to) clauses.push(`start_time <= ${escapeDateTimeLiteral(filters.to)}`);
+  if (filters.observationType) clauses.push(`observation_type = ${escapeNullableStringLiteral(filters.observationType)}`);
+  if (filters.toolName) clauses.push(`tool_name = ${escapeNullableStringLiteral(filters.toolName)}`);
   if (filters.provider) clauses.push(`provider = ${escapeNullableStringLiteral(filters.provider)}`);
   if (filters.model) clauses.push(`model = ${escapeNullableStringLiteral(filters.model)}`);
   if (filters.functionId) clauses.push(`function_id = ${escapeNullableStringLiteral(filters.functionId)}`);
